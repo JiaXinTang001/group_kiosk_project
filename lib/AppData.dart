@@ -1,9 +1,29 @@
 class AppData {
-  // A single, globally accessible instance of your cart array list
-  static final List<Map<String, dynamic>> globalCartItems = [];
+  static List<Map<String, dynamic>> globalCartItems = [];
 
-  // Helper method to calculate totals anywhere in the app
+  // NEW: Global memory storage for submitted orders
+  static List<Map<String, dynamic>> pastOrders = [];
+
   static double getSubtotal() {
-    return globalCartItems.fold(0, (sum, item) => sum + (item['price'] * item['qty']));
+    double total = 0;
+    for (var item in globalCartItems) {
+      total += (item['price'] * item['qty']);
+    }
+    return total;
+  }
+
+  static void clearEntireCart() {
+    globalCartItems.clear();
+  }
+
+   static void saveCurrentOrderToHistory(double total) {
+    if (globalCartItems.isNotEmpty) {
+      pastOrders.add({
+        'id': '#UB-${20000 + pastOrders.length * 7 + 83}', // Generates unique IDs
+        'date': 'Today, ${DateTime.now().hour}:${DateTime.now().minute.toString().padLeft(2, '0')} p.m',
+        'total': total,
+        'items': List<Map<String, dynamic>>.from(globalCartItems),
+      });
+    }
   }
 }

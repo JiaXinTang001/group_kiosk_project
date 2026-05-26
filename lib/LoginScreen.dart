@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:group_kiosk/MainNavigationScreen.dart';
 import 'package:group_kiosk/ForgotPasswordScreen.dart';
 import 'package:group_kiosk/RegisterScreen.dart';
@@ -11,12 +12,14 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  // FIXED: Added a controller to read what the user types live
-  final TextEditingController _matricController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController(); // Changed to explicit email controller
+  final TextEditingController _passwordController = TextEditingController();
+  bool _isLoading = false;
 
   @override
   void dispose() {
-    _matricController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
     super.dispose();
   }
 
@@ -38,20 +41,28 @@ class _LoginScreenState extends State<LoginScreen> {
               style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Color(0xFFE76F2F)),
             ),
             const SizedBox(height: 32),
+
+            // Email Address Input Field
             TextField(
-              controller: _matricController, // FIXED: Linked controller here
+              controller: _emailController,
+              keyboardType: TextInputType.emailAddress,
+              textInputAction: TextInputAction.next,
               decoration: const InputDecoration(
-                labelText: 'Student ID / Matric No',
-                prefixIcon: Icon(Icons.person_outline),
+                labelText: 'Email Address', // Accepts admin@test.com or student emails cleanly
+                prefixIcon: Icon(Icons.email_outlined),
                 border: OutlineInputBorder(),
                 filled: true,
                 fillColor: Colors.white,
               ),
             ),
             const SizedBox(height: 16),
-            const TextField(
+
+            // Password Input Field
+            TextField(
+              controller: _passwordController,
               obscureText: true,
-              decoration: InputDecoration(
+              textInputAction: TextInputAction.done,
+              decoration: const InputDecoration(
                 labelText: 'Password',
                 prefixIcon: Icon(Icons.lock_outline),
                 border: OutlineInputBorder(),
@@ -59,6 +70,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 fillColor: Colors.white,
               ),
             ),
+
             Align(
               alignment: Alignment.centerRight,
               child: TextButton(
@@ -72,25 +84,58 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
             const SizedBox(height: 12),
-            ElevatedButton(
+
+            _isLoading
+                ? const Center(child: CircularProgressIndicator(color: Color(0xFFE76F2F)))
+                : ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFE76F2F),
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
               ),
-              onPressed: () {
-                // FIXED: Pass the text value typed in the login textfield over to the dashboard
-                String loggedInUser = _matricController.text.trim();
-                if (loggedInUser.isEmpty) {
-                  loggedInUser = "Guest User"; // Fallback placeholder text if blank
+              onPressed: () async {
+                String emailInput = _emailController.text.trim();
+                String passwordInput = _passwordController.text.trim();
+
+                if (emailInput.isEmpty || passwordInput.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Please fill out all fields!')),
+                  );
+                  return;
                 }
 
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => MainNavigationScreen(username: loggedInUser),
-                  ),
-                );
+                setState(() {
+                  _isLoading = true;
+                });
+
+                try {
+                  // FIREBASE AUTH: Passes the clean, whole input directly without modifying strings
+                  await FirebaseAuth.instance.signInWithEmailAndPassword(
+                    email: emailInput,
+                    password: passwordInput,
+                  );
+
+                  if (mounted) {
+                    // Takes the prefix or full name string before the '@' as the dashboard display username fallback
+                    String userNickname = emailInput.split('@').first;
+
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => MainNavigationScreen(username: userNickname),
+                      ),
+                    );
+                  }
+                } catch (e) {
+                  setState(() {
+                    _isLoading = false;
+                  });
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Login Error: ${e.toString().split(']').last}')),
+                    );
+                  }
+                }
               },
               child: const Text('Sign In', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
             ),

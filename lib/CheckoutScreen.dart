@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:group_kiosk/OnlineBankingScreen.dart';
 import 'package:group_kiosk/OrderConfirmedScreen.dart';
+import 'package:group_kiosk/AppData.dart';
 
 class CheckoutScreen extends StatefulWidget {
   const CheckoutScreen({super.key});
@@ -64,15 +65,33 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                 ),
                 onPressed: () {
+
+                  final currentTotal = AppData.getSubtotal();
+
+                  AppData.saveCurrentOrderToHistory(currentTotal);
+
+                  AppData.clearEntireCart();
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => OrderConfirmedScreen(orderTotal: currentTotal)),
+                  );
+
                   if (_selectedPayment == 'Online banking') {
+                    // FIXED: Go to the bank screen FIRST without wiping out the data!
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const OnlineBankingScreen()),
+                      MaterialPageRoute(
+                        builder: (context) => OnlineBankingScreen(orderTotal: currentTotal),
+                      ),
                     );
                   } else {
-                    Navigator.push(
+                    // For Cash or E-Wallet, clear the cart immediately since payment happens at counter/QR
+                    AppData.clearEntireCart();
+                    Navigator.pushReplacement(
                       context,
-                      MaterialPageRoute(builder: (context) => const OrderConfirmedScreen()),
+                      MaterialPageRoute(
+                        builder: (context) => OrderConfirmedScreen(orderTotal: currentTotal),
+                      ),
                     );
                   }
                 },

@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "238806264153",
+    "firebase_url": "https://group-kiosk-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "group-kiosk",
+    "storage_bucket": "group-kiosk.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:238806264153:android:d051efdc7822174ad58448",
+        "android_client_info": {
+          "package_name": "com.UniBite.group_kiosk"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBZZZT6wVai5JpmuuK9HDJaMN97qy1GJus"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

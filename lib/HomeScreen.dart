@@ -12,6 +12,11 @@ class HomeScreen extends StatelessWidget {
     {'name': 'Nasi Kukus Ayam Berempah', 'price': 8.50, 'category': 'Rice'},
     {'name': 'Nasi Goreng Kampung', 'price': 5.50, 'category': 'Rice'},
     {'name': 'Mee Goreng Pak Tam', 'price': 4.50, 'category': 'Noodles'},
+    {'name': 'Milo Ais', 'price': 3.50, 'category': 'Drinks'},
+    {'name': 'Teh O', 'price': 2.00, 'category': 'Drinks'},
+    {'name': 'Teh Ais', 'price': 2.50, 'category': 'Drinks'},
+    {'name': 'Teh Tarik', 'price': 2.50, 'category': 'Drinks'},
+    {'name': 'Sky Juice', 'price': 1.00, 'category': 'Drinks'},
   ];
 
   HomeScreen({
@@ -82,6 +87,7 @@ class HomeScreen extends StatelessWidget {
                               Text('RM ${food['price'].toStringAsFixed(2)}', style: const TextStyle(color: Color(0xFFE76F2F), fontWeight: FontWeight.bold)),
                               IconButton(
                                 icon: const Icon(Icons.add_circle, color: Color(0xFFE76F2F)),
+                                // FIXED: Now includes the category check support
                                 onPressed: () {
                                   Navigator.push(
                                     context,
@@ -91,7 +97,7 @@ class HomeScreen extends StatelessWidget {
                                           name: food['name'],
                                           price: food['price'],
                                           imagePath: 'https://via.placeholder.com/150',
-                                          category: food['category'],
+                                          category: food['category'] ?? 'Rice', // Safely passes category string
                                         ),
                                         onCartUpdated: onCartUpdated,
                                       ),

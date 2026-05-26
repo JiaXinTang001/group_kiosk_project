@@ -20,10 +20,13 @@ class MenuScreenState extends State<MenuScreen> with SingleTickerProviderStateMi
     {'name': 'Nasi Lemak Daun Pisang', 'price': 2.50, 'category': 'Rice', 'session': 'Breakfast'},
     {'name': 'Nasi Kerabu', 'price': 6.50, 'category': 'Rice', 'session': 'Lunch'},
     {'name': 'Nasi Kukus Ayam Berempah', 'price': 8.50, 'category': 'Rice', 'session': 'Lunch'},
-    {'name': 'Nasi Goreng Kampung', 'price': 5.50, 'category': 'Rice', 'session': 'Dinner'},
-    {'name': 'Mee Goreng Pak Tam', 'price': 4.50, 'category': 'Noodles', 'session': 'Dinner'},
-    {'name': 'Milo Ais', 'price': 2.50, 'category': 'Drinks', 'session': 'Lunch'},
-    {'name': 'Teh Tarik', 'price': 2.00, 'category': 'Drinks', 'session': 'Breakfast'},
+    {'name': 'Nasi Goreng Kampung', 'price': 5.50, 'category': 'Rice', 'session': ['Lunch', 'Dinner']},
+    {'name': 'Mee Goreng Pak Tam', 'price': 5.50, 'category': 'Noodles', 'session': ['Lunch', 'Dinner']},
+    {'name': 'Milo Ais', 'price': 3.50, 'category': 'Drinks', 'session': ['Breakfast', 'Lunch', 'Dinner']},
+    {'name': 'Teh O', 'price': 2.00, 'category': 'Drinks', 'session': ['Breakfast', 'Lunch', 'Dinner']},
+    {'name': 'Teh Ais', 'price': 2.50, 'category': 'Drinks', 'session': ['Breakfast', 'Lunch', 'Dinner']},
+    {'name': 'Teh Tarik', 'price': 2.50, 'category': 'Drinks', 'session': ['Breakfast', 'Lunch', 'Dinner']},
+    {'name': 'Sky Juice', 'price': 1.00, 'category': 'Drinks', 'session': ['Breakfast', 'Lunch', 'Dinner']},
   ];
 
   @override
@@ -72,7 +75,7 @@ class MenuScreenState extends State<MenuScreen> with SingleTickerProviderStateMi
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text('Breakfast', style: TextStyle(fontWeight: FontWeight.bold)),
-                  Text('8.00am-10.00am', style: TextStyle(fontSize: 9, color: Colors.white70)),
+                  Text('8.00am-11.00am', style: TextStyle(fontSize: 9, color: Colors.white70)),
                 ],
               ),
             ),
@@ -81,7 +84,7 @@ class MenuScreenState extends State<MenuScreen> with SingleTickerProviderStateMi
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text('Lunch', style: TextStyle(fontWeight: FontWeight.bold)),
-                  Text('10.00am-4.00pm', style: TextStyle(fontSize: 9, color: Colors.white70)),
+                  Text('11.00am-4.00pm', style: TextStyle(fontSize: 9, color: Colors.white70)),
                 ],
               ),
             ),

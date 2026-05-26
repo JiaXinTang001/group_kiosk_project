@@ -27,20 +27,46 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
 
   final TextEditingController _specialRequestController = TextEditingController();
 
-  // FIXED: Added helper method to swap descriptions dynamically based on the food item selected
+  // FIXED: Cleaned up structural brackets and added the mandatory fallback return string
   String _getDynamicDescription(String foodName) {
     if (foodName.contains('Nasi Lemak')) {
       return 'Nasi lemak dengan ayam berempah, sambal, ikan bilis, kacang dan timun.';
-    } else if (foodName.contains('Nasi Kerabu')) {
+    }
+    else if (foodName.contains('Nasi Kerabu'))
+    {
       return 'Nasi kerabu tradisional disajikan dengan ulam-ulaman segar, solok lada, dan kerupuk.';
-    } else if (foodName.contains('Nasi Kukus')) {
+    }
+    else if (foodName.contains('Nasi Kukus'))
+    {
       return 'Nasi kukus gembur dihidangkan bersama ayam goreng berempah panas dan kuah gulai pekat.';
-    } else if (foodName.contains('Mee Goreng')) {
+    }
+    else if (foodName.contains('Nasi Goreng Kampung'))
+    {
+
+      return 'Nasi goreng kampung klasik yang digoreng bersama kangkung, ikan bilis garing, dan cili padi pekat.';
+    }
+    else if (foodName.contains('Mee Goreng'))
+    {
       return 'Mee goreng mamak klasik yang digoreng garing bersama telur, taugeh, dan bumbu istimewa.';
-    } else if (foodName.contains('Milo Ais')) {
+    }
+    else if (foodName.contains('Milo Ais'))
+    {
       return 'Minuman coklat malt premium dibancuh kaw bersama susu dan dihidangkan sejuk.';
-    } else if (foodName.contains('Teh Tarik')) {
+    }
+    else if (foodName.contains('Teh O'))
+    {
+      return 'Teh merah jernih yang menyegarkan, dibancuh sempurna dengan kemanisan yang seimbang.';
+    } else if (foodName.contains('Teh Ais'))
+    {
+      return 'Teh susu manis berkrim yang dihidangkan bersama ais batu hancur untuk kesegaran maksima.';
+    }
+    else if (foodName.contains('Teh Tarik'))
+    {
       return 'Teh wangi berkualiti tinggi yang ditarik sempurna bersama susu manis berkrim.';
+    }
+    else if (foodName.contains('Sky Juice'))
+    {
+      return 'Air yang baik dan manfaat untuk badan.';
     }
 
     return 'Hidangan premium yang disediakan segar dari dapur kiosk untuk anda.';
@@ -138,7 +164,7 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
               Text('RM ${widget.food.price.toStringAsFixed(2)}', style: const TextStyle(fontSize: 16, color: Color(0xFFE76F2F), fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
 
-              // FIXED: Successfully references the internal matching method block
+              // Successfully references the internal matching method block
               Text(
                 _getDynamicDescription(widget.food.name),
                 style: const TextStyle(fontSize: 12, color: Colors.grey, height: 1.4),
@@ -146,7 +172,7 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
               const SizedBox(height: 20),
 
               // Add-ons section title
-              // FIXED: Wrap the add-ons inside an 'if' statement so they only show up for Rice category dishes!
+              // Wrap the add-ons inside an 'if' statement so they only show up for Rice category dishes!
               if (widget.food.category == 'Rice' || widget.food.name.contains('Nasi')) ...[
                 const Text('Add-ons (optional)', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 10),
