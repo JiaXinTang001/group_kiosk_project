@@ -7,16 +7,66 @@ class HomeScreen extends StatelessWidget {
   final VoidCallback onCartUpdated;
 
   final List<Map<String, dynamic>> allFoods = [
-    {'name': 'Nasi Lemak Daun Pisang', 'price': 2.50, 'category': 'Rice'},
-    {'name': 'Nasi Kerabu', 'price': 6.50, 'category': 'Rice'},
-    {'name': 'Nasi Kukus Ayam Berempah', 'price': 8.50, 'category': 'Rice'},
-    {'name': 'Nasi Goreng Kampung', 'price': 5.50, 'category': 'Rice'},
-    {'name': 'Mee Goreng Pak Tam', 'price': 4.50, 'category': 'Noodles'},
-    {'name': 'Milo Ais', 'price': 3.50, 'category': 'Drinks'},
-    {'name': 'Teh O', 'price': 2.00, 'category': 'Drinks'},
-    {'name': 'Teh Ais', 'price': 2.50, 'category': 'Drinks'},
-    {'name': 'Teh Tarik', 'price': 2.50, 'category': 'Drinks'},
-    {'name': 'Sky Juice', 'price': 1.00, 'category': 'Drinks'},
+    {
+      'name': 'Nasi Lemak Daun Pisang',
+      'price': 2.50,
+      'category': 'Rice',
+      'image': 'assets/images/nasi_lemak.jpeg',
+    },
+    {
+      'name': 'Nasi Kerabu',
+      'price': 6.50,
+      'category': 'Rice',
+      'image': 'assets/images/nasi_kerabu.jpeg',
+    },
+    {
+      'name': 'Nasi Kukus Ayam Berempah',
+      'price': 8.50,
+      'category': 'Rice',
+      'image': 'assets/images/nasi_kukus_ayam.jpg',
+    },
+    {
+      'name': 'Nasi Goreng Kampung',
+      'price': 5.50,
+      'category': 'Rice',
+      'image': 'assets/images/ngk.jpg',
+    },
+    {
+      'name': 'Mee Goreng Pak Tam',
+      'price': 4.50,
+      'category': 'Noodles',
+      'image': 'assets/images/mg.jpeg',
+    },
+    {
+      'name': 'Milo Ais',
+      'price': 3.50,
+      'category': 'Drinks',
+      'image': 'assets/images/milo_ice.jpeg',
+    },
+    {
+      'name': 'Teh O',
+      'price': 2.00,
+      'category': 'Drinks',
+      'image': 'assets/images/teh_o.jpg',
+    },
+    {
+      'name': 'Teh Ais',
+      'price': 2.50,
+      'category': 'Drinks',
+      'image': 'assets/images/TEH_AIS.png',
+    },
+    {
+      'name': 'Teh Tarik',
+      'price': 2.50,
+      'category': 'Drinks',
+      'image': 'assets/images/teh_tarik.jpg',
+    },
+    {
+      'name': 'Sky Juice',
+      'price': 1.00,
+      'category': 'Drinks',
+      'image': 'assets/images/sky_juice.jpg',
+    },
   ];
 
   HomeScreen({
@@ -28,15 +78,15 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xffEFEFEF),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 8), // Small padding from the top edge
+              const SizedBox(height: 8),
 
-              // FIXED: Clean Search Field is now the very first element
               TextField(
                 decoration: InputDecoration(
                   hintText: 'Search food details...',
@@ -48,7 +98,6 @@ class HomeScreen extends StatelessWidget {
               ),
               const SizedBox(height: 24),
 
-              // Best Seller Grid Section
               const Text('Best Seller', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               const SizedBox(height: 10),
               GridView.builder(
@@ -71,12 +120,23 @@ class HomeScreen extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Expanded(
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: Colors.grey[200],
-                                borderRadius: BorderRadius.circular(8),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: Image.asset(
+                                food['image'],
+                                width: double.infinity,
+                                height: double.infinity,
+                                fit: BoxFit.cover,
+                                // Fallback placeholder in case a filename gets misspelled later
+                                errorBuilder: (context, error, stackTrace) {
+                                  return Container(
+                                    color: Colors.grey[200],
+                                    child: const Center(
+                                      child: Icon(Icons.fastfood, color: Colors.grey, size: 40),
+                                    ),
+                                  );
+                                },
                               ),
-                              child: const Center(child: Icon(Icons.fastfood, color: Colors.grey, size: 40)),
                             ),
                           ),
                           const SizedBox(height: 8),
@@ -87,7 +147,6 @@ class HomeScreen extends StatelessWidget {
                               Text('RM ${food['price'].toStringAsFixed(2)}', style: const TextStyle(color: Color(0xFFE76F2F), fontWeight: FontWeight.bold)),
                               IconButton(
                                 icon: const Icon(Icons.add_circle, color: Color(0xFFE76F2F)),
-                                // FIXED: Now includes the category check support
                                 onPressed: () {
                                   Navigator.push(
                                     context,
@@ -96,8 +155,8 @@ class HomeScreen extends StatelessWidget {
                                         food: FoodItem(
                                           name: food['name'],
                                           price: food['price'],
-                                          imagePath: 'https://via.placeholder.com/150',
-                                          category: food['category'] ?? 'Rice', // Safely passes category string
+                                          imagePath: food['image'],
+                                          category: food['category'] ?? 'Rice',
                                         ),
                                         onCartUpdated: onCartUpdated,
                                       ),

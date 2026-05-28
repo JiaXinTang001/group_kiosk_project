@@ -47,7 +47,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
             const Icon(Icons.app_registration_outlined, size: 70, color: Color(0xFFE76F2F)),
             const SizedBox(height: 24),
 
-            // Full Name Input
             TextField(
               controller: _nameController,
               textInputAction: TextInputAction.next,
@@ -61,7 +60,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ),
             const SizedBox(height: 16),
 
-            // Email Input Field
             TextField(
               controller: _emailController,
               keyboardType: TextInputType.emailAddress,
@@ -76,7 +74,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ),
             const SizedBox(height: 16),
 
-            // Matric ID Input
             TextField(
               controller: _matricController,
               textInputAction: TextInputAction.next,
@@ -90,7 +87,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ),
             const SizedBox(height: 16),
 
-            // Phone Number Input
             TextField(
               controller: _phoneController,
               keyboardType: TextInputType.phone,
@@ -105,7 +101,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ),
             const SizedBox(height: 16),
 
-            // Password Input
             TextField(
               controller: _passwordController,
               obscureText: true,
@@ -120,7 +115,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ),
             const SizedBox(height: 32),
 
-            // Action Button / Spinner
             _isLoading
                 ? const Center(child: CircularProgressIndicator(color: Color(0xFFE76F2F)))
                 : ElevatedButton(
@@ -146,14 +140,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 });
 
                 try {
-                  // 1. FIREBASE AUTH: Register User
                   UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
                     email: _emailController.text.trim(),
                     password: _passwordController.text.trim(),
                   );
 
-                  // 2. CLOUD FIRESTORE: Save Extra Student Data
-                  await FirebaseFirestore.instance.collection('students').doc(userCredential.user!.uid).set({
+                  FirebaseFirestore.instance.collection('students').doc(userCredential.user!.uid).set({
                     'email': _emailController.text.trim(),
                     'matricNo': _matricController.text.trim(),
                     'fullName': _nameController.text.trim(),
@@ -162,7 +154,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     'createdAt': Timestamp.now(),
                   });
 
-                  // 3. SUCCESS PIPELINE: Turn off loading, show green snackbar, and route pop backward
                   if (mounted) {
                     setState(() {
                       _isLoading = false;
@@ -179,7 +170,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     Navigator.of(context).pop();
                   }
                 } catch (e) {
-                  // 4. ERROR PIPELINE: Reset spinner and print error string safely
                   if (mounted) {
                     setState(() {
                       _isLoading = false;

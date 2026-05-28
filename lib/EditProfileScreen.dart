@@ -1,24 +1,69 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart'; // Handles choosing gallery/camera files
-import 'package:firebase_storage/firebase_storage.dart'; // Handles file uploads
-import 'package:cloud_firestore/cloud_firestore.dart'; // Handles text databases
-import 'package:firebase_auth/firebase_auth.dart'; // For dynamic user tracking
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_database/firebase_database.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:typed_data';
+import 'dart:convert';
 
 class EditProfileScreen extends StatefulWidget {
-  const EditProfileScreen({super.key});
+  final String matricNo;
+
+  const EditProfileScreen({super.key, required this.matricNo});
 
   @override
   State<EditProfileScreen> createState() => _EditProfileScreenState();
 }
 
 class _EditProfileScreenState extends State<EditProfileScreen> {
-  final _nameController = TextEditingController(text: 'User Profile');
-  final _phoneController = TextEditingController(text: '+6012-3456789');
+  late TextEditingController _nameController;
+  late TextEditingController _phoneController;
 
-  File? _selectedImage;
+  Uint8List? _webImageBytes;
+  String? _currentProfilePicUrl;
   final ImagePicker _picker = ImagePicker();
-  bool _isLoading = false; // Controls screen loading blocker state during database upload
+
+  bool _isFetchingData = true;
+  bool _isSaving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController(text: 'User Profile');
+    _phoneController = TextEditingController(text: '+6012-3456789');
+    _loadCurrentProfileData();
+  }
+
+  Future<void> _loadCurrentProfileData() async {
+    debugPrint("=== Starting Profile Data Fetch for Matric: ${widget.matricNo} ===");
+    try {
+      final snapshot = await FirebaseDatabase.instanceFor(
+        app: Firebase.app(),
+        databaseURL: 'https://group-kiosk-default-rtdb.asia-southeast1.firebasedatabase.app',
+      ).ref().child('students').child(widget.matricNo).get().timeout(const Duration(seconds: 3));
+
+      if (snapshot.exists && snapshot.value != null) {
+        debugPrint("=== Data successfully retrieved from Firebase! ===");
+        final data = Map<String, dynamic>.from(snapshot.value as Map);
+        if (mounted) {
+          setState(() {
+            _nameController.text = data['fullName'] ?? 'User Profile';
+            _phoneController.text = data['phoneNumber'] ?? '+6012-3456789';
+            _currentProfilePicUrl = data['profilePicUrl'];
+          });
+        }
+      } else {
+        debugPrint("=== No existing database record found for this student matrix. ===");
+      }
+    } catch (e) {
+      debugPrint("=== Firebase background fetch stopped/timed out: $e ===");
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isFetchingData = false;
+        });
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -27,7 +72,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     super.dispose();
   }
 
-  // Method to trigger the bottom sheet menu for image source options
   Future<void> _pickImage() async {
     showModalBottomSheet(
       context: context,
@@ -44,8 +88,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 Navigator.pop(context);
                 final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery);
                 if (pickedFile != null) {
+                  final Uint8List imageBytes = await pickedFile.readAsBytes();
                   setState(() {
-                    _selectedImage = File(pickedFile.path);
+                    _webImageBytes = imageBytes;
                   });
                 }
               },
@@ -57,8 +102,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 Navigator.pop(context);
                 final XFile? pickedFile = await _picker.pickImage(source: ImageSource.camera);
                 if (pickedFile != null) {
+                  final Uint8List imageBytes = await pickedFile.readAsBytes();
                   setState(() {
-                    _selectedImage = File(pickedFile.path);
+                    _webImageBytes = imageBytes;
                   });
                 }
               },
@@ -78,16 +124,22 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         iconTheme: const IconThemeData(color: Colors.white),
         title: const Text('Edit Profile', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         centerTitle: true,
+        bottom: _isFetchingData
+            ? const PreferredSize(
+          preferredSize: Size.fromHeight(4),
+          child: LinearProgressIndicator(color: Colors.white, backgroundColor: Colors.transparent),
+        )
+            : null,
       ),
-      body: _isLoading
+      body: _isSaving
           ? const Center(
         child: CircularProgressIndicator(color: Color(0xFFE76F2F)),
       )
-          : Padding(
+          : SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
         child: Column(
           children: [
-            // INTERACTIVE AVATAR WITH PHOTO UPLOADER CHANNELS
+            const SizedBox(height: 10),
             GestureDetector(
               onTap: _pickImage,
               child: Stack(
@@ -96,11 +148,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   CircleAvatar(
                     radius: 55,
                     backgroundColor: Colors.grey[400],
-                    backgroundImage: _selectedImage != null
-                        ? FileImage(_selectedImage!)
-                        : null,
+                    backgroundImage: _webImageBytes != null
+                        ? MemoryImage(_webImageBytes!)
+                        : (_currentProfilePicUrl != null && _currentProfilePicUrl!.isNotEmpty
+                        ? (_currentProfilePicUrl!.startsWith('data:image')
+                        ? MemoryImage(base64Decode(_currentProfilePicUrl!.split(',').last))
+                        : NetworkImage(_currentProfilePicUrl!) as ImageProvider)
+                        : null),
                   ),
-                  if (_selectedImage == null)
+                  if (_webImageBytes == null && _currentProfilePicUrl == null)
                     const CircleAvatar(
                       radius: 55,
                       backgroundColor: Colors.black26,
@@ -111,7 +167,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             ),
             const SizedBox(height: 32),
 
-            // Name Field Block
             TextField(
               controller: _nameController,
               textInputAction: TextInputAction.next,
@@ -124,7 +179,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             ),
             const SizedBox(height: 16),
 
-            // Phone Field Block
             TextField(
               controller: _phoneController,
               keyboardType: TextInputType.phone,
@@ -139,7 +193,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 fillColor: Colors.white,
               ),
             ),
-            const Spacer(),
+            const SizedBox(height: 40),
 
             SizedBox(
               width: double.infinity,
@@ -150,42 +204,39 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                 ),
                 onPressed: () async {
-                  final userId = FirebaseAuth.instance.currentUser?.uid ?? 'guest_user';
-
                   setState(() {
-                    _isLoading = true;
+                    _isSaving = true;
                   });
 
                   try {
-                    String imageUrl = "";
+                    String imageUrl = _currentProfilePicUrl ?? "";
 
-                    // 1. FIREBASE STORAGE: Upload local image file to storage bucket if it exists
-                    if (_selectedImage != null) {
-                      String fileName = 'profile_${userId}_${DateTime.now().millisecondsSinceEpoch}.jpg';
-                      Reference storageRef = FirebaseStorage.instance.ref().child('user_profiles/$fileName');
-
-                      UploadTask uploadTask = storageRef.putFile(_selectedImage!);
-                      TaskSnapshot snapshot = await uploadTask;
-                      imageUrl = await snapshot.ref.getDownloadURL();
+                    if (_webImageBytes != null) {
+                      String base64String = base64Encode(_webImageBytes!);
+                      imageUrl = "data:image/jpeg;base64,$base64String";
                     }
 
-                    // 2. CLOUD FIRESTORE: Save text values and profile picture web link securely
-                    await FirebaseFirestore.instance.collection('students').doc(userId).set({
+                    final Map<String, dynamic> updatedData = {
                       'fullName': _nameController.text.trim(),
                       'phoneNumber': _phoneController.text.trim(),
-                      if (imageUrl.isNotEmpty) 'profilePicUrl': imageUrl,
-                      'updatedAt': Timestamp.now(),
-                    }, SetOptions(merge: true));
+                      'profilePicUrl': imageUrl,
+                      'updatedAt': DateTime.now().millisecondsSinceEpoch,
+                    };
+
+                    await FirebaseDatabase.instanceFor(
+                      app: Firebase.app(),
+                      databaseURL: 'https://group-kiosk-default-rtdb.asia-southeast1.firebasedatabase.app',
+                    ).ref().child('students').child(widget.matricNo).update(updatedData);
 
                     if (mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Profile synced to Firebase online!')),
+                        const SnackBar(content: Text('Profile saved successfully!')),
                       );
                       Navigator.pop(context);
                     }
                   } catch (e) {
                     setState(() {
-                      _isLoading = false;
+                      _isSaving = false;
                     });
                     if (mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(

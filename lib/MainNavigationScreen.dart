@@ -3,7 +3,7 @@ import 'package:group_kiosk/HomeScreen.dart';
 import 'package:group_kiosk/MenuScreen.dart';
 import 'package:group_kiosk/CartScreen.dart';
 import 'package:group_kiosk/ProfileScreen.dart';
-import 'AppData.dart'; // Import storage vault link
+import 'AppData.dart';
 
 class MainNavigationScreen extends StatefulWidget {
   final String username;
@@ -19,12 +19,19 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
 
   void clearCart() {
     setState(() {
-      AppData.globalCartItems.clear(); // Clears vault directly
+      AppData.globalCartItems.clear();
     });
   }
 
   void updateCartState() {
-    setState(() {}); // Triggers navigation container to repaint
+    setState(() {});
+  }
+
+  int _getCartItemCount() {
+    return AppData.globalCartItems.fold<int>(
+        0,
+            (sum, item) => sum + (item['qty'] as int? ?? 0)
+    );
   }
 
   @override
@@ -32,9 +39,11 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     final List<Widget> pages = [
       HomeScreen(username: widget.username, onCartUpdated: updateCartState),
       MenuScreen(onCartUpdated: updateCartState),
-      CartScreen(onCartClear: updateCartState),
+      CartScreen(onCartClear: clearCart),
       ProfileScreen(matricNo: widget.username),
     ];
+
+    int cartCount = _getCartItemCount();
 
     return Scaffold(
       body: IndexedStack(
@@ -50,13 +59,24 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
           setState(() {
             _currentIndex = index;
           });
-          updateCartState(); // Forces page reload when switching tabs
+          updateCartState();
         },
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home_outlined), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.menu_book), label: 'Menu'),
-          BottomNavigationBarItem(icon: Icon(Icons.shopping_cart_outlined), label: 'Cart'),
-          BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: 'Profile'),
+        items: [
+          const BottomNavigationBarItem(icon: Icon(Icons.home_outlined), label: 'Home'),
+          const BottomNavigationBarItem(icon: Icon(Icons.menu_book), label: 'Menu'),
+
+          BottomNavigationBarItem(
+            icon: cartCount > 0
+                ? Badge(
+              label: Text('$cartCount', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              backgroundColor: const Color(0xFFE76F2F),
+              child: const Icon(Icons.shopping_cart_outlined),
+            )
+                : const Icon(Icons.shopping_cart_outlined),
+            label: 'Cart',
+          ),
+
+          const BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: 'Profile'),
         ],
       ),
     );

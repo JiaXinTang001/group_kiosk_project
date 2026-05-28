@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:group_kiosk/TrackOrderScreen.dart'; // FIXED: Changed from OrderTrackingScreen to match your real file name
+import 'package:group_kiosk/TrackOrderScreen.dart';
 
 class OrderConfirmedScreen extends StatelessWidget {
   final double orderTotal;
+  final String? orderId;
 
-  const OrderConfirmedScreen({super.key, required this.orderTotal});
+  const OrderConfirmedScreen({
+    super.key,
+    required this.orderTotal,
+    this.orderId,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -54,9 +59,14 @@ class OrderConfirmedScreen extends StatelessWidget {
                   children: [
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: const [
-                        Text('Order ID', style: TextStyle(color: Colors.grey)),
-                        Text('#UB-20483', style: TextStyle(fontWeight: FontWeight.bold)),
+                      children: [
+                        const Text('Order ID', style: TextStyle(color: Colors.grey)),
+                        Text(
+                          orderId != null
+                              ? '#${orderId!.substring(0, 5).toUpperCase()}'
+                              : '#UB-20483',
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
                       ],
                     ),
                     const Divider(height: 24),
@@ -92,7 +102,6 @@ class OrderConfirmedScreen extends StatelessWidget {
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                 ),
                 onPressed: () {
-                  // FIXED: Now targets your exact class from TrackOrderScreen.dart
                   Navigator.push(
                     context,
                     MaterialPageRoute(

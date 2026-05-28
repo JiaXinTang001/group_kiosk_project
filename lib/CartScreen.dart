@@ -41,6 +41,8 @@ class _CartScreenState extends State<CartScreen> {
               itemBuilder: (context, index) {
                 final item = cartItems[index];
                 final List<dynamic> addons = item['addons'] ?? [];
+                final String? specialRequest = item['specialRequest'];
+                final String? imagePath = item['image'];
 
                 return Card(
                   margin: const EdgeInsets.symmetric(vertical: 8.0),
@@ -49,6 +51,7 @@ class _CartScreenState extends State<CartScreen> {
                     padding: const EdgeInsets.all(12.0),
                     child: Row(
                       children: [
+
                         Container(
                           width: 60,
                           height: 60,
@@ -56,12 +59,22 @@ class _CartScreenState extends State<CartScreen> {
                             color: Colors.grey[200],
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          child: const Icon(Icons.fastfood, color: Colors.grey),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: imagePath != null
+                                ? Image.asset(
+                              imagePath,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return const Icon(Icons.fastfood, color: Colors.grey);
+                              },
+                            )
+                                : const Icon(Icons.fastfood, color: Colors.grey),
+                          ),
                         ),
                         const SizedBox(width: 16),
                         Expanded(
                           child: Column(
-                            // FIXED TYPO HERE (Line 64): Corrected syntax formatting structure
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
@@ -75,6 +88,14 @@ class _CartScreenState extends State<CartScreen> {
                                   style: const TextStyle(fontSize: 12, color: Colors.grey),
                                 ),
                               ],
+                              // 💡 ADDED: Displays custom notes securely if the student typed any
+                              if (specialRequest != null && specialRequest.isNotEmpty) ...[
+                                const SizedBox(height: 2),
+                                Text(
+                                  "Note: \"$specialRequest\"",
+                                  style: const TextStyle(fontSize: 12, color: Colors.grey, fontStyle: FontStyle.italic),
+                                ),
+                              ],
                               const SizedBox(height: 6),
                               Text(
                                 'RM ${(item['price'] * item['qty']).toStringAsFixed(2)}',
@@ -84,7 +105,6 @@ class _CartScreenState extends State<CartScreen> {
                           ),
                         ),
 
-                        // Interactive Quantity adjustment rows
                         Row(
                           children: [
                             IconButton(

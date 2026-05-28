@@ -1,8 +1,15 @@
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_database/firebase_database.dart';
 class AppData {
   static List<Map<String, dynamic>> globalCartItems = [];
-
-  // NEW: Global memory storage for submitted orders
   static List<Map<String, dynamic>> pastOrders = [];
+
+  static FirebaseDatabase get database {
+    return FirebaseDatabase.instanceFor(
+      app: Firebase.app(),
+      databaseURL: 'https://group-kiosk-default-rtdb.asia-southeast1.firebasedatabase.app',
+    );
+  }
 
   static double getSubtotal() {
     double total = 0;
@@ -16,7 +23,7 @@ class AppData {
     globalCartItems.clear();
   }
 
-   static void saveCurrentOrderToHistory(double total) {
+  static void saveCurrentOrderToHistory(double total) {
     if (globalCartItems.isNotEmpty) {
       pastOrders.add({
         'id': '#UB-${20000 + pastOrders.length * 7 + 83}', // Generates unique IDs

@@ -17,16 +17,76 @@ class MenuScreenState extends State<MenuScreen> with SingleTickerProviderStateMi
   String _activeMealSession = 'Breakfast';
 
   final List<Map<String, dynamic>> mockFoods = [
-    {'name': 'Nasi Lemak Daun Pisang', 'price': 2.50, 'category': 'Rice', 'session': 'Breakfast'},
-    {'name': 'Nasi Kerabu', 'price': 6.50, 'category': 'Rice', 'session': 'Lunch'},
-    {'name': 'Nasi Kukus Ayam Berempah', 'price': 8.50, 'category': 'Rice', 'session': 'Lunch'},
-    {'name': 'Nasi Goreng Kampung', 'price': 5.50, 'category': 'Rice', 'session': ['Lunch', 'Dinner']},
-    {'name': 'Mee Goreng Pak Tam', 'price': 5.50, 'category': 'Noodles', 'session': ['Lunch', 'Dinner']},
-    {'name': 'Milo Ais', 'price': 3.50, 'category': 'Drinks', 'session': ['Breakfast', 'Lunch', 'Dinner']},
-    {'name': 'Teh O', 'price': 2.00, 'category': 'Drinks', 'session': ['Breakfast', 'Lunch', 'Dinner']},
-    {'name': 'Teh Ais', 'price': 2.50, 'category': 'Drinks', 'session': ['Breakfast', 'Lunch', 'Dinner']},
-    {'name': 'Teh Tarik', 'price': 2.50, 'category': 'Drinks', 'session': ['Breakfast', 'Lunch', 'Dinner']},
-    {'name': 'Sky Juice', 'price': 1.00, 'category': 'Drinks', 'session': ['Breakfast', 'Lunch', 'Dinner']},
+    {
+      'name': 'Nasi Lemak Daun Pisang',
+      'price': 2.50,
+      'category': 'Rice',
+      'session': 'Breakfast',
+      'image': 'assets/images/nasi_lemak.jpeg',
+    },
+    {
+      'name': 'Nasi Kerabu',
+      'price': 6.50,
+      'category': 'Rice',
+      'session': 'Lunch',
+      'image': 'assets/images/nasi_kerabu.jpeg',
+    },
+    {
+      'name': 'Nasi Kukus Ayam Berempah',
+      'price': 8.50,
+      'category': 'Rice',
+      'session': 'Lunch',
+      'image': 'assets/images/nasi_kukus_ayam.jpg',
+    },
+    {
+      'name': 'Nasi Goreng Kampung',
+      'price': 5.50,
+      'category': 'Rice',
+      'session': ['Lunch', 'Dinner'],
+      'image': 'assets/images/ngk.jpg',
+    },
+    {
+      'name': 'Mee Goreng Pak Tam',
+      'price': 5.50,
+      'category': 'Noodles',
+      'session': ['Lunch', 'Dinner'],
+      'image': 'assets/images/mg.jpeg',
+    },
+    {
+      'name': 'Milo Ais',
+      'price': 3.50,
+      'category': 'Drinks',
+      'session': ['Breakfast', 'Lunch', 'Dinner'],
+      'image': 'assets/images/milo_ice.jpeg',
+    },
+    {
+      'name': 'Teh O',
+      'price': 2.00,
+      'category': 'Drinks',
+      'session': ['Breakfast', 'Lunch', 'Dinner'],
+      'image': 'assets/images/teh_o.jpg',
+    },
+    {
+      'name': 'Teh Ais',
+      'price': 2.50,
+      'category': 'Drinks',
+      'session': ['Breakfast', 'Lunch', 'Dinner'],
+      'image': 'assets/images/TEH_AIS.png',
+    },
+    {
+      'name': 'Teh Tarik',
+      'price': 2.50,
+      'category': 'Drinks',
+      'session': ['Breakfast', 'Lunch', 'Dinner'],
+      'image': 'assets/images/teh_tarik.jpg',
+    },
+    {
+      'name': 'Sky Juice',
+      'price': 1.00,
+      'category': 'Drinks',
+      'session': ['Breakfast', 'Lunch', 'Dinner'],
+      'image': 'assets/images/sky_juice.jpg',
+    },
   ];
 
   @override
@@ -54,12 +114,20 @@ class MenuScreenState extends State<MenuScreen> with SingleTickerProviderStateMi
   @override
   Widget build(BuildContext context) {
     final filteredFoods = mockFoods.where((food) {
-      bool matchesSession = food['session'] == _activeMealSession;
+      // 💡 FIXED: Smart check handles entries where session is a single String OR a List array
+      bool matchesSession = false;
+      if (food['session'] is List) {
+        matchesSession = (food['session'] as List).contains(_activeMealSession);
+      } else {
+        matchesSession = food['session'] == _activeMealSession;
+      }
+
       bool matchesCategory = _selectedSubCategory == 'All' || food['category'] == _selectedSubCategory;
       return matchesSession && matchesCategory;
     }).toList();
 
     return Scaffold(
+      backgroundColor: const Color(0xffEFEFEF),
       appBar: AppBar(
         backgroundColor: const Color(0xFFE76F2F),
         title: const Text('Menu', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
@@ -142,14 +210,24 @@ class MenuScreenState extends State<MenuScreen> with SingleTickerProviderStateMi
                     padding: const EdgeInsets.all(12.0),
                     child: Row(
                       children: [
+
                         Container(
                           width: 70,
                           height: 70,
                           decoration: BoxDecoration(
-                            color: Colors.grey[300],
+                            color: Colors.grey[200],
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          child: const Icon(Icons.fastfood_outlined, color: Colors.grey),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Image.asset(
+                              item['image'],
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return const Icon(Icons.fastfood_outlined, color: Colors.grey);
+                              },
+                            ),
+                          ),
                         ),
                         const SizedBox(width: 16),
                         Expanded(
@@ -173,10 +251,10 @@ class MenuScreenState extends State<MenuScreen> with SingleTickerProviderStateMi
                                   food: FoodItem(
                                     name: item['name'],
                                     price: item['price'],
-                                    imagePath: 'https://via.placeholder.com/150',
+                                    // 💡 UPDATED: Correctly passes your local image asset path onward to detail screen
+                                    imagePath: item['image'],
                                     category: item['category'],
                                   ),
-                                  // FIXED: We removed the local cart items parameters from here entirely!
                                   onCartUpdated: widget.onCartUpdated,
                                 ),
                               ),

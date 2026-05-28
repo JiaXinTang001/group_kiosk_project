@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:group_kiosk/MainNavigationScreen.dart'; // Target file import
+import 'package:group_kiosk/MainNavigationScreen.dart';
 
 class SuccessScreen extends StatelessWidget {
   const SuccessScreen({super.key});
@@ -44,7 +44,6 @@ class SuccessScreen extends StatelessWidget {
               ),
               const SizedBox(height: 40),
 
-              // Master Return Button
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(

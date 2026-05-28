@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-// CHANGE THIS LINE TO MATCH:
 class HelpCentreScreen extends StatelessWidget {
   const HelpCentreScreen({super.key});
 

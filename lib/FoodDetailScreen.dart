@@ -19,7 +19,6 @@ class FoodDetailScreen extends StatefulWidget {
 class _FoodDetailScreenState extends State<FoodDetailScreen> {
   int _quantity = 1;
 
-  // Restored your original static checkbox variables
   bool _extraSambal = true;
   bool _telurMata = false;
   bool _telurRebus = false;
@@ -27,45 +26,34 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
 
   final TextEditingController _specialRequestController = TextEditingController();
 
-  // FIXED: Cleaned up structural brackets and added the mandatory fallback return string
   String _getDynamicDescription(String foodName) {
     if (foodName.contains('Nasi Lemak')) {
       return 'Nasi lemak dengan ayam berempah, sambal, ikan bilis, kacang dan timun.';
     }
-    else if (foodName.contains('Nasi Kerabu'))
-    {
+    else if (foodName.contains('Nasi Kerabu')) {
       return 'Nasi kerabu tradisional disajikan dengan ulam-ulaman segar, solok lada, dan kerupuk.';
     }
-    else if (foodName.contains('Nasi Kukus'))
-    {
+    else if (foodName.contains('Nasi Kukus')) {
       return 'Nasi kukus gembur dihidangkan bersama ayam goreng berempah panas dan kuah gulai pekat.';
     }
-    else if (foodName.contains('Nasi Goreng Kampung'))
-    {
-
+    else if (foodName.contains('Nasi Goreng Kampung')) {
       return 'Nasi goreng kampung klasik yang digoreng bersama kangkung, ikan bilis garing, dan cili padi pekat.';
     }
-    else if (foodName.contains('Mee Goreng'))
-    {
+    else if (foodName.contains('Mee Goreng')) {
       return 'Mee goreng mamak klasik yang digoreng garing bersama telur, taugeh, dan bumbu istimewa.';
     }
-    else if (foodName.contains('Milo Ais'))
-    {
+    else if (foodName.contains('Milo Ais')) {
       return 'Minuman coklat malt premium dibancuh kaw bersama susu dan dihidangkan sejuk.';
     }
-    else if (foodName.contains('Teh O'))
-    {
+    else if (foodName.contains('Teh O')) {
       return 'Teh merah jernih yang menyegarkan, dibancuh sempurna dengan kemanisan yang seimbang.';
-    } else if (foodName.contains('Teh Ais'))
-    {
+    } else if (foodName.contains('Teh Ais')) {
       return 'Teh susu manis berkrim yang dihidangkan bersama ais batu hancur untuk kesegaran maksima.';
     }
-    else if (foodName.contains('Teh Tarik'))
-    {
+    else if (foodName.contains('Teh Tarik')) {
       return 'Teh wangi berkualiti tinggi yang ditarik sempurna bersama susu manis berkrim.';
     }
-    else if (foodName.contains('Sky Juice'))
-    {
+    else if (foodName.contains('Sky Juice')) {
       return 'Air yang baik dan manfaat untuk badan.';
     }
 
@@ -74,9 +62,8 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
 
   void _confirmAddToCart() {
     double finalPricePerItem = widget.food.price;
-    List<String> selectedAddons = []; // Track names of selected add-ons
+    List<String> selectedAddons = [];
 
-    // Check which add-ons are selected, update price, and add to the text list
     if (_extraSambal) {
       finalPricePerItem += 0.20;
       selectedAddons.add("Extra sambal");
@@ -95,13 +82,13 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
     }
 
     setState(() {
-      // OPTION B FIX: Directly inserts item into global storage list
-      // This ensures every add-on order creates a brand-new separate line in the cart!
       AppData.globalCartItems.add({
         'name': widget.food.name,
         'price': finalPricePerItem,
         'qty': _quantity,
         'addons': selectedAddons,
+        'image': widget.food.imagePath,
+        'specialRequest': _specialRequestController.text.trim(),
       });
     });
 
@@ -147,6 +134,7 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+
               Center(
                 child: Container(
                   width: double.infinity,
@@ -155,7 +143,20 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
                     color: Colors.grey[200],
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Center(child: Icon(Icons.fastfood_outlined, size: 80, color: Colors.grey)),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image.asset(
+                      widget.food.imagePath,
+                      width: double.infinity,
+                      height: double.infinity,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return const Center(
+                          child: Icon(Icons.fastfood_outlined, size: 80, color: Colors.grey),
+                        );
+                      },
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(height: 16),
@@ -164,15 +165,12 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
               Text('RM ${widget.food.price.toStringAsFixed(2)}', style: const TextStyle(fontSize: 16, color: Color(0xFFE76F2F), fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
 
-              // Successfully references the internal matching method block
               Text(
                 _getDynamicDescription(widget.food.name),
                 style: const TextStyle(fontSize: 12, color: Colors.grey, height: 1.4),
               ),
               const SizedBox(height: 20),
 
-              // Add-ons section title
-              // Wrap the add-ons inside an 'if' statement so they only show up for Rice category dishes!
               if (widget.food.category == 'Rice' || widget.food.name.contains('Nasi')) ...[
                 const Text('Add-ons (optional)', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 10),

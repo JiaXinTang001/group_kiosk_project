@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:group_kiosk/OrderConfirmedScreen.dart';
-import 'package:group_kiosk/AppData.dart'; // Handles global item clearing actions
+import 'package:group_kiosk/AppData.dart';
 
 class OnlineBankingScreen extends StatefulWidget {
-  final double orderTotal; // Dynamic pricing amount parameter
+  final double orderTotal;
 
   const OnlineBankingScreen({super.key, required this.orderTotal});
 
@@ -12,10 +13,9 @@ class OnlineBankingScreen extends StatefulWidget {
 }
 
 class _OnlineBankingScreenState extends State<OnlineBankingScreen> {
-  // Default selected bank matching your layout list
   String _selectedBank = 'Bank Islam';
+  bool _isProcessing = false;
 
-  // Bank names definition list matching your layout screen image specifications
   final List<Map<String, dynamic>> _banks = [
     {'name': 'Bank Islam'},
     {'name': 'Maybank2u'},
@@ -52,7 +52,7 @@ class _OnlineBankingScreenState extends State<OnlineBankingScreen> {
             child: Container(
               margin: const EdgeInsets.all(16.0),
               decoration: BoxDecoration(
-                color: const Color(0xFFFFFDFD), // Soft white card base container layout
+                color: const Color(0xFFFFFDFD),
                 borderRadius: BorderRadius.circular(15),
               ),
               child: ListView.separated(
@@ -65,15 +65,16 @@ class _OnlineBankingScreenState extends State<OnlineBankingScreen> {
 
                   return InkWell(
                     onTap: () {
-                      setState(() {
-                        _selectedBank = bank['name'];
-                      });
+                      if (!_isProcessing) {
+                        setState(() {
+                          _selectedBank = bank['name'];
+                        });
+                      }
                     },
                     child: Padding(
                       padding: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 12.0),
                       child: Row(
                         children: [
-                          // Graphic Container Placeholder Box for individual Bank Logos
                           Container(
                             width: 70,
                             height: 35,
@@ -97,7 +98,6 @@ class _OnlineBankingScreenState extends State<OnlineBankingScreen> {
                               style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.black),
                             ),
                           ),
-                          // Custom Radio button element indicator bubble matching your UI design
                           Container(
                             width: 18,
                             height: 18,
@@ -118,33 +118,96 @@ class _OnlineBankingScreenState extends State<OnlineBankingScreen> {
             ),
           ),
 
-          // Action Bottom Payment Checkout Button Frame Panel Layout Container
           Container(
             color: Colors.transparent,
             padding: const EdgeInsets.all(16.0),
             child: SafeArea(
               child: SizedBox(
                 width: double.infinity,
-                child: ElevatedButton(
+                child: _isProcessing
+                    ? const Center(child: CircularProgressIndicator(color: Color(0xFFE76F2F)))
+                    : ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFFE76F2F),
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                   ),
-                  onPressed: () {
-                    // 1. Save order to data history map memory BEFORE resetting lists
-                    AppData.saveCurrentOrderToHistory(widget.orderTotal);
+                  onPressed: () async {
+                    final user = FirebaseAuth.instance.currentUser;
+                    if (user == null) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Please log in to finish checkout!')),
+                      );
+                      return;
+                    }
 
-                    // 2. Wipe the cart items completely clean
-                    AppData.clearEntireCart();
+                    if (AppData.globalCartItems.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Your cart is empty!')),
+                      );
+                      return;
+                    }
 
-                    // 3. FIXED: Cleaned up the broken block syntax loop and extra duplicate functions
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => OrderConfirmedScreen(orderTotal: widget.orderTotal),
-                      ),
-                    );
+                    setState(() { _isProcessing = true; });
+
+                    try {
+                      final double finalTotal = widget.orderTotal;
+
+                      final now = DateTime.now();
+                      final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                      final String formattedDate = "${now.day} ${months[now.month - 1]} ${now.year}";
+
+                      List<Map<String, dynamic>> orderItems = AppData.globalCartItems.map((item) {
+                        return {
+                          'name': item['name'],
+                          'qty': item['qty'],
+                          'price': item['price'],
+                        };
+                      }).toList();
+
+                      final Map<String, dynamic> newOrder = {
+                        'userId': user.uid,
+                        'date': formattedDate,
+                        'items': orderItems,
+                        'total': finalTotal,
+                        'status': 'Being prepared',
+                        'createdAt': DateTime.now().millisecondsSinceEpoch,
+                        'paymentMethod': 'Online Banking ($_selectedBank)',
+                      };
+
+                      final docRef = AppData.database.ref().child('orders').push();
+
+                      await docRef.set(newOrder);
+
+                      AppData.saveCurrentOrderToHistory(finalTotal);
+
+                      setState(() {
+                        AppData.clearEntireCart();
+                      });
+
+                      if (mounted) {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => OrderConfirmedScreen(
+                              orderTotal: finalTotal,
+                              orderId: docRef.key,
+                            ),
+                          ),
+                        );
+                      }
+
+                    } catch (e) {
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Payment Sync Failed: ${e.toString()}')),
+                        );
+                      }
+                    } finally {
+                      if (mounted) {
+                        setState(() { _isProcessing = false; });
+                      }
+                    }
                   },
                   child: const Text(
                     'Checkout',

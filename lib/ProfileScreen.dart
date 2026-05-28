@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart'; // Handles fetching data online
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_database/firebase_database.dart';
+import 'dart:convert';
 import 'package:group_kiosk/CommunityRulesScreen.dart';
 import 'package:group_kiosk/OrderHistoryScreen.dart';
 import 'package:group_kiosk/SettingsScreen.dart';
@@ -30,17 +32,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
         title: const Text('Profile', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         centerTitle: true,
       ),
-      // LIVE DATA STREAM: Fetches student data dynamically from Firestore using the matric number
-      body: FutureBuilder<DocumentSnapshot>(
-        future: FirebaseFirestore.instance.collection('students').doc(widget.matricNo).get(),
+      body: FutureBuilder<DataSnapshot>(
+        future: FirebaseDatabase.instanceFor(
+          app: Firebase.app(),
+          databaseURL: 'https://group-kiosk-default-rtdb.asia-southeast1.firebasedatabase.app',
+        ).ref().child('students').child(widget.matricNo).get(),
         builder: (context, snapshot) {
-          // Fallback placeholders while loading or if data doesn't exist yet
           String displayName = 'User Profile';
           String displayPhone = '+6012-3456789';
-          String displayImage = 'https://via.placeholder.com/150';
+          String? displayImage;
 
-          if (snapshot.hasData && snapshot.data!.exists) {
-            final data = snapshot.data!.data() as Map<String, dynamic>;
+          if (snapshot.hasData && snapshot.data!.value != null) {
+            final data = Map<String, dynamic>.from(snapshot.data!.value as Map);
             displayName = data['fullName'] ?? displayName;
             displayPhone = data['phoneNumber'] ?? displayPhone;
             if (data['profilePicUrl'] != null && data['profilePicUrl'].toString().isNotEmpty) {
@@ -53,17 +56,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: Column(
               children: [
                 const SizedBox(height: 10),
-                // Dynamic Profile Image
                 CircleAvatar(
                   radius: 50,
-                  backgroundColor: Colors.grey,
-                  backgroundImage: NetworkImage(displayImage),
+                  backgroundColor: Colors.grey[300],
+                  backgroundImage: displayImage != null
+                      ? (displayImage.startsWith('data:image')
+                      ? MemoryImage(base64Decode(displayImage.split(',').last))
+                      : NetworkImage(displayImage) as ImageProvider)
+                      : null,
+                  child: displayImage == null
+                      ? const Icon(Icons.person, size: 50, color: Colors.grey)
+                      : null,
                 ),
                 const SizedBox(height: 12),
-                // Dynamic Student Name
+
                 Text(displayName, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 4),
-                // Dynamic Student Email/Matric
                 Text(
                   '${widget.matricNo}@student.edu.my',
                   style: const TextStyle(color: Colors.grey, fontSize: 14),
@@ -76,15 +84,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                   ),
                   onPressed: () async {
-                    // Passes the current dynamic data over to the editor screen
                     await Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const EditProfileScreen(),
+                        builder: (context) => EditProfileScreen(matricNo: widget.matricNo),
                       ),
                     );
-
-                    // Triggers a UI refresh when they return from editing
                     setState(() {});
                   },
                   child: const Padding(
@@ -94,7 +99,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 const SizedBox(height: 24),
 
-                // Profile Menu Options
                 _buildProfileMenu(context, Icons.history, 'Order history'),
                 _buildProfileMenu(context, Icons.settings_outlined, 'Settings'),
                 _buildProfileMenu(context, Icons.favorite_border, 'Favourite'),

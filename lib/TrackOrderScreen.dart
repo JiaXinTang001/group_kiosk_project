@@ -20,7 +20,6 @@ class _TrackOrderScreenState extends State<TrackOrderScreen> {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () {
-            // Wipes data and handles safe app reset if they press the top-left back arrow
             AppData.clearEntireCart();
             Navigator.pushAndRemoveUntil(
               context,
@@ -46,7 +45,6 @@ class _TrackOrderScreenState extends State<TrackOrderScreen> {
                     ),
                     const SizedBox(height: 20),
 
-                    // Estimated Wait Timer Card Box Showcase
                     Card(
                       color: Colors.white,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
@@ -60,7 +58,7 @@ class _TrackOrderScreenState extends State<TrackOrderScreen> {
                               width: 80,
                               height: 80,
                               decoration: const BoxDecoration(
-                                color: Color(0xFFE8584A), // Red circle element matches your screenshot
+                                color: Color(0xFFE8584A),
                                 shape: BoxShape.circle,
                               ),
                               child: const Center(
@@ -79,7 +77,6 @@ class _TrackOrderScreenState extends State<TrackOrderScreen> {
                     ),
                     const SizedBox(height: 30),
 
-                    // Tracking Status Timeline Steps Row Elements
                     _buildTrackingStep(
                       title: 'Order placed',
                       subtitle: '9:10 p.m - confirmed',
@@ -105,7 +102,6 @@ class _TrackOrderScreenState extends State<TrackOrderScreen> {
               ),
             ),
 
-            // FIXED: Added primary navigation exit button to return to the home screen
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
@@ -115,16 +111,13 @@ class _TrackOrderScreenState extends State<TrackOrderScreen> {
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                 ),
                 onPressed: () {
-                  // 1. Flush your shopping cart storage arrays out of memory
                   AppData.clearEntireCart();
-
-                  // 2. Destroys current tracking view page stack layers completely
                   Navigator.pushAndRemoveUntil(
                     context,
                     MaterialPageRoute(
                       builder: (context) => const MainNavigationScreen(username: 'Customer'),
                     ),
-                        (route) => false, // Clears the history so the user can start a fresh order
+                        (route) => false,
                   );
                 },
                 child: const Text(
@@ -139,7 +132,6 @@ class _TrackOrderScreenState extends State<TrackOrderScreen> {
     );
   }
 
-  // Visual helper method to quickly draw status check steps rows seamlessly
   Widget _buildTrackingStep({required String title, required String subtitle, required bool isCompleted}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 12.0),

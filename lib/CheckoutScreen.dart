@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:group_kiosk/OnlineBankingScreen.dart';
 import 'package:group_kiosk/OrderConfirmedScreen.dart';
 import 'package:group_kiosk/AppData.dart';
@@ -12,10 +13,12 @@ class CheckoutScreen extends StatefulWidget {
 
 class _CheckoutScreenState extends State<CheckoutScreen> {
   String _selectedPayment = 'Online banking';
+  bool _isCheckingOut = false;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xffF3F3F3),
       appBar: AppBar(
         backgroundColor: const Color(0xFFE76F2F),
         iconTheme: const IconThemeData(color: Colors.white),
@@ -56,46 +59,106 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             _buildPaymentOption('Touch \'n Go eWallet', 'Scan QR to pay', Icons.qr_code_scanner),
             _buildPaymentOption('Online banking', 'FPX transfer', Icons.account_balance_outlined),
             const SizedBox(height: 24),
+
             SizedBox(
               width: double.infinity,
-              child: ElevatedButton(
+              child: _isCheckingOut
+                  ? const Center(child: CircularProgressIndicator(color: Color(0xFFE76F2F)))
+                  : ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFFE76F2F),
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                 ),
-                onPressed: () {
+                onPressed: () async {
+                  final user = FirebaseAuth.instance.currentUser;
+                  if (user == null) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Please log in to place an order!')),
+                    );
+                    return;
+                  }
 
-                  final currentTotal = AppData.getSubtotal();
-
-                  AppData.saveCurrentOrderToHistory(currentTotal);
-
-                  AppData.clearEntireCart();
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (context) => OrderConfirmedScreen(orderTotal: currentTotal)),
-                  );
+                  if (AppData.globalCartItems.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Your cart is empty!')),
+                    );
+                    return;
+                  }
 
                   if (_selectedPayment == 'Online banking') {
-                    // FIXED: Go to the bank screen FIRST without wiping out the data!
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => OnlineBankingScreen(orderTotal: currentTotal),
+                        builder: (context) => OnlineBankingScreen(orderTotal: AppData.getSubtotal()),
                       ),
                     );
-                  } else {
-                    // For Cash or E-Wallet, clear the cart immediately since payment happens at counter/QR
-                    AppData.clearEntireCart();
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => OrderConfirmedScreen(orderTotal: currentTotal),
-                      ),
-                    );
+                    return;
+                  }
+
+                  setState(() { _isCheckingOut = true; });
+
+                  try {
+                    final double finalTotal = AppData.getSubtotal();
+
+                    final now = DateTime.now();
+                    final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                    final String formattedDate = "${now.day} ${months[now.month - 1]} ${now.year}";
+
+                    List<Map<String, dynamic>> orderItems = AppData.globalCartItems.map((item) {
+                      return {
+                        'name': item['name'],
+                        'qty': item['qty'],
+                        'price': item['price'],
+                      };
+                    }).toList();
+
+                    final Map<String, dynamic> newOrder = {
+                      'userId': user.uid,
+                      'date': formattedDate,
+                      'items': orderItems,
+                      'total': finalTotal,
+                      'status': 'Being prepared',
+                      'createdAt': DateTime.now().millisecondsSinceEpoch,
+                      'paymentMethod': _selectedPayment,
+                    };
+
+                    final docRef = AppData.database.ref().child('orders').push();
+
+                    await docRef.set(newOrder);
+
+                    setState(() {
+                      AppData.clearEntireCart();
+                    });
+
+                    if (mounted) {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => OrderConfirmedScreen(
+                            orderTotal: finalTotal,
+                            orderId: docRef.key,
+                          ),
+                        ),
+                      );
+                    }
+
+                  } catch (e) {
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Checkout Failed: ${e.toString()}')),
+                      );
+                    }
+                  } finally {
+                    if (mounted) {
+                      setState(() { _isCheckingOut = false; });
+                    }
                   }
                 },
-                child: const Text('Checkout', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                child: const Text(
+                  'Place Order',
+                  style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                ),
               ),
             ),
           ],
