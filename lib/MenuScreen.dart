@@ -18,11 +18,11 @@ class MenuScreenState extends State<MenuScreen> with SingleTickerProviderStateMi
 
   final List<Map<String, dynamic>> mockFoods = [
     {
-      'name': 'Nasi Lemak Daun Pisang',
+      'name': 'Nasi Lemak Bujang',
       'price': 2.50,
       'category': 'Rice',
       'session': 'Breakfast',
-      'image': 'assets/images/nasi_lemak.jpeg',
+      'image': 'assets/images/nasi_lemak2.jpeg',
     },
     {
       'name': 'Nasi Kerabu',
@@ -53,11 +53,11 @@ class MenuScreenState extends State<MenuScreen> with SingleTickerProviderStateMi
       'image': 'assets/images/mg.jpeg',
     },
     {
-      'name': 'Milo Ais',
+      'name': 'Milo Ais Napis Padu',
       'price': 3.50,
       'category': 'Drinks',
       'session': ['Breakfast', 'Lunch', 'Dinner'],
-      'image': 'assets/images/milo_ice.jpeg',
+      'image': 'assets/images/milo_ais2.jpeg',
     },
     {
       'name': 'Teh O',
@@ -74,11 +74,11 @@ class MenuScreenState extends State<MenuScreen> with SingleTickerProviderStateMi
       'image': 'assets/images/TEH_AIS.png',
     },
     {
-      'name': 'Teh Tarik',
+      'name': 'Teh Tarik Pior Qaseh Azam',
       'price': 2.50,
       'category': 'Drinks',
       'session': ['Breakfast', 'Lunch', 'Dinner'],
-      'image': 'assets/images/teh_tarik.jpg',
+      'image': 'assets/images/teh_tarik2.jpeg',
     },
     {
       'name': 'Sky Juice',
